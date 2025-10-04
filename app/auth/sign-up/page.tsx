@@ -1,29 +1,36 @@
-"use client"
 import Link from "next/link"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-async function signInAction(formData: FormData) {
-  "use server"
+async function signUpAction(formData: FormData) {
   const email = String(formData.get("email") || "")
   const password = String(formData.get("password") || "")
 
   if (!email || !password) {
-    redirect("/auth/login?error=" + encodeURIComponent("Email and password are required"))
+    redirect("/auth/sign-up?error=" + encodeURIComponent("Email and password are required"))
   }
 
   try {
     const supabase = createServerClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const origin = headers().get("origin") || ""
+    const emailRedirectTo =
+      process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || (origin ? `${origin}/protected` : undefined)
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo },
+    })
     if (error) {
-      redirect("/auth/login?error=" + encodeURIComponent(error.message))
+      redirect("/auth/sign-up?error=" + encodeURIComponent(error.message))
     }
-    redirect("/protected")
+    redirect("/auth/login?message=" + encodeURIComponent("Check your email to confirm your account."))
   } catch (e: any) {
-    redirect("/auth/login?error=" + encodeURIComponent(e?.message || "Failed to sign in"))
+    redirect("/auth/sign-up?error=" + encodeURIComponent(e?.message || "Failed to sign up"))
   }
 }
 
@@ -41,23 +48,23 @@ export default function Page({
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Sign in</CardTitle>
-              <CardDescription>Use your email and password</CardDescription>
+              <CardTitle className="text-2xl">Create your account</CardTitle>
+              <CardDescription>Use email and a strong password</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="grid gap-3" action={signInAction}>
+              <form className="grid gap-3" action={signUpAction}>
                 <Input type="email" name="email" placeholder="you@example.com" required />
-                <Input type="password" name="password" placeholder="Password" minLength={6} required />
+                <Input type="password" name="password" placeholder="Password (min 6 chars)" minLength={6} required />
                 {error ? <p className="text-sm text-red-500">{error}</p> : null}
                 {message ? <p className="text-sm text-emerald-500">{message}</p> : null}
                 <Button type="submit" className="w-full">
-                  Sign in
+                  Sign up
                 </Button>
               </form>
               <p className="mt-3 text-sm text-muted-foreground">
-                Don&apos;t have an account?{" "}
-                <Link className="text-primary underline underline-offset-2" href="/auth/sign-up">
-                  Sign up
+                Already have an account?{" "}
+                <Link className="text-primary underline underline-offset-2" href="/auth/login">
+                  Sign in
                 </Link>
               </p>
             </CardContent>

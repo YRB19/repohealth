@@ -24,11 +24,11 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-            Sign in
+          <Button variant="ghost" size="sm" className="hidden md:inline-flex" asChild>
+            <Link href="/auth/sign-up">Sign up</Link>
           </Button>
-          <Button size="sm" className="bg-primary text-primary-foreground hover:opacity-90">
-            Get Started
+          <Button size="sm" className="bg-primary text-primary-foreground hover:opacity-90" asChild>
+            <Link href="/auth/sign-up">Get Started</Link>
           </Button>
         </div>
       </div>
