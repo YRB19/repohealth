@@ -39,14 +39,14 @@ styles/ – CSS and styling modules.
 # Getting Started
 To run the project locally:
 
-git clone https://github.com/YRB19/repohealth-x0.git
-cd repohealth-x0
+git clone https://github.com/YRB19/repohealth.git
+cd repohealth
 pnpm install
 pnpm dev
 
 npm install
 npm run dev
-The app will be available at http://localhost:3000.
+The app will be available at https://repohealth.vercel.app/.
 
 # Deployment
 Hosted on Vercel for fast, global delivery.
