@@ -1,30 +1,60 @@
-# Website UI redesign
+# RepoHealth-X0
+RepoHealth-X0 is a web-based project focused on repository analytics and website interface design. The project leverages modern technologies including TypeScript, React (Next.js), and CSS.
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+# Overview
+Purpose: Provides insights into repository health and offers a redesigned website UI experience.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/rishits-projects-02a84fec/v0-website-ui-redesign)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/gP3xwvZuoir)
+Tech Stack: TypeScript, Next.js (React), CSS.
 
-## Overview
+# Features
+Clean and intuitive UI for repository-related analytics.
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+Organized components for scalability.
 
-## Deployment
+Modern design practices throughout.
 
-Your project is live at:
+# Project Structure
+repohealth-x0/
+├── app/
+├── components/
+├── lib/
+├── public/
+├── styles/
+├── .gitignore
+├── package.json
+├── pnpm-lock.yaml
+├── next.config.mjs
+├── postcss.config.mjs
+├── tsconfig.json
+app/ – Main application logic and routing.
 
-**[https://vercel.com/rishits-projects-02a84fec/v0-website-ui-redesign](https://vercel.com/rishits-projects-02a84fec/v0-website-ui-redesign)**
+components/ – Reusable and core UI components.
 
-## Build your app
+lib/ – Utility libraries and helpers.
 
-Continue building your app on:
+public/ – Static assets (images, fonts, etc.).
 
-**[https://v0.app/chat/projects/gP3xwvZuoir](https://v0.app/chat/projects/gP3xwvZuoir)**
+styles/ – CSS and styling modules.
 
-## How It Works
+# Getting Started
+To run the project locally:
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+git clone https://github.com/YRB19/repohealth-x0.git
+cd repohealth-x0
+pnpm install
+pnpm dev
+
+npm install
+npm run dev
+The app will be available at http://localhost:3000.
+
+# Deployment
+Hosted on Vercel for fast, global delivery.
+
+See the live site: repohealth.vercel.app
+
+# Contributing
+Contributions are welcome! Please open issues or submit pull requests for proposed changes and improvements.
+
+# License
+Distributed under the MIT License. See LICENSE for more info.
