@@ -19,6 +19,7 @@ type Repo = {
   forks: number
   watchers: number
   openIssues: number
+  aiSummary?: string // optional AI-generated paragraph
 }
 
 export function ResultsList({
@@ -62,7 +63,12 @@ export function ResultsList({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <p className="text-pretty text-muted-foreground">{r.description || "No description."}</p>
+              {/* Prefer AI summary when available */}
+              {r.aiSummary ? (
+                <p className="text-pretty text-foreground">{r.aiSummary}</p>
+              ) : (
+                <p className="text-pretty text-muted-foreground">{r.description || "No description."}</p>
+              )}
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 <span>★ {r.stars.toLocaleString()}</span>
                 <span>Forks {r.forks.toLocaleString()}</span>

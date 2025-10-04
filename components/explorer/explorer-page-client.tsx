@@ -28,6 +28,8 @@ export function ExplorerPageClient() {
   const page = searchParams.get("page") || "1"
   const perPage = searchParams.get("perPage") || "20"
   const topics = searchParams.get("topics") || ""
+  const mode = searchParams.get("mode") || "normal"
+  const aiPrompt = searchParams.get("aiPrompt") || ""
 
   const qs = new URLSearchParams({
     query,
@@ -39,9 +41,12 @@ export function ExplorerPageClient() {
     page,
     perPage,
     topics,
+    mode,
+    aiPrompt,
   })
 
-  const { data, error, isLoading } = useSWR(`/api/search?${qs.toString()}`, fetcher, { revalidateOnFocus: false })
+  const endpoint = mode === "ai" ? "/api/ai-search" : "/api/search"
+  const { data, error, isLoading } = useSWR(`${endpoint}?${qs.toString()}`, fetcher, { revalidateOnFocus: false })
 
   return (
     <section className="mx-auto max-w-6xl px-4">
