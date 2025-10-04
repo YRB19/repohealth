@@ -1,4 +1,4 @@
-# RepoHealth-X0
+# RepoHealth
 RepoHealth-X0 is a web-based project focused on repository analytics and website interface design. The project leverages modern technologies including TypeScript, React (Next.js), and CSS.
 
 # Overview
