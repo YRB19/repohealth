@@ -22,7 +22,7 @@ export function ExplorerPageClient() {
   const query = searchParams.get("query") || ""
   const language = searchParams.get("language") || "any"
   const license = searchParams.get("license") || "any"
-  const starsMin = searchParams.get("starsMin") || "0"
+  const healthMin = searchParams.get("healthMin") || "0"
   const timeframe = searchParams.get("timeframe") || "any"
   const sort = searchParams.get("sort") || "best-match"
   const page = searchParams.get("page") || "1"
@@ -35,7 +35,7 @@ export function ExplorerPageClient() {
     query,
     language,
     license,
-    starsMin,
+    healthMin,
     timeframe,
     sort,
     page,

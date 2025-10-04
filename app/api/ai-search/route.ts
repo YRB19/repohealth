@@ -43,6 +43,7 @@ export async function GET(req: Request) {
     .filter(Boolean)
   const page = Number.parseInt(url.searchParams.get("page") || "1", 10)
   const perPage = Math.min(Number.parseInt(url.searchParams.get("perPage") || "20", 10), 20)
+  const healthMin = Number.parseInt(url.searchParams.get("healthMin") || "0", 10)
 
   // Build GitHub search query using filters + any provided keywords (query) + AI prompt as keywords
   const qualifiers: string[] = []
@@ -198,9 +199,63 @@ ${JSON.stringify(
       aiSummary: summaryMap.get(r.fullName) || "",
     }))
 
+    const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n))
+    const normalize = (arr: number[]) => {
+      const min = Math.min(...arr)
+      const max = Math.max(...arr)
+      if (!isFinite(min) || !isFinite(max) || max === min) return arr.map(() => 50)
+      return arr.map((v) => ((v - min) / (max - min)) * 100)
+    }
+    const normalizeInverse = (arr: number[]) => normalize(arr).map((v) => 100 - v)
+
+    const now = Date.now()
+    const forksArr = enriched.map((r: any) => Number(r.forks || 0))
+    const watchersArr = enriched.map((r: any) => Number(r.watchers || 0))
+    const daysSinceUpdatedArr = enriched.map((r: any) => {
+      const t = new Date(r.updatedAt).getTime()
+      return Math.min((now - t) / (1000 * 60 * 60 * 24), 730)
+    })
+
+    const activityNorm = normalize(forksArr)
+    const communityNorm = normalize(watchersArr)
+    const freshnessNorm = normalizeInverse(daysSinceUpdatedArr)
+
+    const docsNorm = enriched.map((r: any) => {
+      const desc = (r.description || "").trim()
+      const descScore = clamp((desc.length / 120) * 100)
+      const licenseScore = r.license ? 100 : 50
+      return clamp(0.7 * descScore + 0.3 * licenseScore)
+    })
+
+    const compatibilityNorm = enriched.map((r: any) => {
+      const langScore = r.language ? 100 : 50
+      const licenseScore = r.license ? 100 : 60
+      return clamp(0.6 * langScore + 0.4 * licenseScore)
+    })
+
+    const WEIGHTS = { activity: 0.3, community: 0.25, docs: 0.15, freshness: 0.15, compatibility: 0.15 }
+
+    let withHealth = enriched.map((r: any, i: number) => {
+      const score =
+        WEIGHTS.activity * activityNorm[i] +
+        WEIGHTS.community * communityNorm[i] +
+        WEIGHTS.docs * docsNorm[i] +
+        WEIGHTS.freshness * freshnessNorm[i] +
+        WEIGHTS.compatibility * compatibilityNorm[i]
+      const healthScore = Number(score.toFixed(1))
+      const healthLabel = healthScore >= 80 ? "Highly recommended" : healthScore >= 60 ? "Promising" : "Needs review"
+      return { ...r, healthScore, healthLabel }
+    })
+
+    // Rank by health score and filter by healthMin
+    withHealth.sort((a: any, b: any) => (b.healthScore ?? 0) - (a.healthScore ?? 0))
+    if (Number.isFinite(healthMin) && healthMin > 0) {
+      withHealth = withHealth.filter((r: any) => (r.healthScore ?? 0) >= healthMin)
+    }
+
     return NextResponse.json({
-      totalCount: data.total_count || enriched.length,
-      items: enriched,
+      totalCount: withHealth.length,
+      items: withHealth,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Unexpected error" }, { status: 500 })

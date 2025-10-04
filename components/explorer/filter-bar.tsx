@@ -21,32 +21,29 @@ export function FilterBar() {
   const searchParams = useSearchParams()
 
   const [qInput, setQInput] = useState(searchParams.get("query") || "")
-  const [stars, setStars] = useState<number>(Number.parseInt(searchParams.get("starsMin") || "0", 10))
+  const [healthMin, setHealthMin] = useState<number>(Number.parseInt(searchParams.get("healthMin") || "0", 10))
   const [mode, setMode] = useState<string>(searchParams.get("mode") || "normal")
   const [aiPromptInput, setAiPromptInput] = useState<string>(searchParams.get("aiPrompt") || "")
 
-  const lastAppliedStarsRef = useRef<number>(Number.parseInt(searchParams.get("starsMin") || "0", 10))
+  const lastAppliedHealthRef = useRef<number>(Number.parseInt(searchParams.get("healthMin") || "0", 10))
   const queryDebounceRef = useRef<number | null>(null)
   const starsDebounceRef = useRef<number | null>(null)
 
   useEffect(() => {
     setQInput(searchParams.get("query") || "")
-    setStars(Number.parseInt(searchParams.get("starsMin") || "0", 10))
+    setHealthMin(Number.parseInt(searchParams.get("healthMin") || "0", 10))
     setMode(searchParams.get("mode") || "normal")
     setAiPromptInput(searchParams.get("aiPrompt") || "")
-    // keep ref in sync when URL changes externally
-    lastAppliedStarsRef.current = Number.parseInt(searchParams.get("starsMin") || "0", 10)
+    lastAppliedHealthRef.current = Number.parseInt(searchParams.get("healthMin") || "0", 10)
   }, [searchParams])
 
   useEffect(() => {
     if (queryDebounceRef.current) {
       window.clearTimeout(queryDebounceRef.current)
     }
-    // apply after short pause
     queryDebounceRef.current = window.setTimeout(() => {
       const url = new URL(window.location.href)
       setParam(url, "query", qInput)
-      // reset page to 1 on query change
       setParam(url, "page", "1")
       router.replace(`${pathname}?${url.searchParams.toString()}`)
     }, 400)
@@ -56,36 +53,35 @@ export function FilterBar() {
   }, [qInput, pathname, router])
 
   useEffect(() => {
-    if (stars === lastAppliedStarsRef.current) return
+    if (healthMin === lastAppliedHealthRef.current) return
     if (starsDebounceRef.current) {
       window.clearTimeout(starsDebounceRef.current)
     }
     starsDebounceRef.current = window.setTimeout(() => {
       const url = new URL(window.location.href)
-      setParam(url, "starsMin", String(stars))
+      setParam(url, "healthMin", String(healthMin))
       setParam(url, "page", "1")
-      lastAppliedStarsRef.current = stars
+      lastAppliedHealthRef.current = healthMin
       router.replace(`${pathname}?${url.searchParams.toString()}`)
     }, 400)
     return () => {
       if (starsDebounceRef.current) window.clearTimeout(starsDebounceRef.current)
     }
-  }, [stars, pathname, router])
+  }, [healthMin, pathname, router])
 
   const onApply = useCallback(() => {
     const url = new URL(window.location.href)
     setParam(url, "query", qInput)
     setParam(url, "language", searchParams.get("language"))
-    setParam(url, "license", searchParams.get("license"))
     setParam(url, "timeframe", searchParams.get("timeframe"))
     setParam(url, "sort", searchParams.get("sort"))
     setParam(url, "topics", searchParams.get("topics"))
-    setParam(url, "starsMin", String(stars))
+    setParam(url, "healthMin", String(healthMin))
     setParam(url, "mode", mode)
     setParam(url, "aiPrompt", aiPromptInput)
-    setParam(url, "page", "1") // reset page on apply
+    setParam(url, "page", "1")
     router.replace(`${pathname}?${url.searchParams.toString()}`)
-  }, [qInput, stars, pathname, router, searchParams, mode, aiPromptInput])
+  }, [qInput, healthMin, pathname, router, searchParams, mode, aiPromptInput])
 
   const setURLParam = useCallback(
     (key: string, value: string) => {
@@ -98,7 +94,6 @@ export function FilterBar() {
   )
 
   const language = searchParams.get("language") || "any"
-  const license = searchParams.get("license") || "any"
   const timeframe = searchParams.get("timeframe") || "any"
   const sort = searchParams.get("sort") || "best-match"
   const topics = searchParams.get("topics") || ""
@@ -107,14 +102,12 @@ export function FilterBar() {
     () => ["any", "TypeScript", "JavaScript", "Python", "Go", "Rust", "Java", "C++", "C#", "Ruby"],
     [],
   )
-  const licenses = useMemo(() => ["any", "mit", "apache-2.0", "gpl-3.0", "mpl-2.0", "bsd-3-clause", "unlicense"], [])
   const timeframes = useMemo(() => ["any", "week", "month", "year"], [])
 
   return (
     <div className="mb-6 rounded-xl border border-border/50 bg-secondary p-4">
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="md:col-span-2">
-          {/* Normal search field (also used in AI mode if desired) */}
           <InputGroup>
             <Input
               placeholder={mode === "ai" ? "Optional keywords (used with AI prompt)" : "Search repositories"}
@@ -131,7 +124,6 @@ export function FilterBar() {
           <p className="mt-1 text-xs text-muted-foreground">Press Enter or click Apply to update results.</p>
         </div>
 
-        {/* Search Mode */}
         <div className="flex flex-col gap-2">
           <label className="text-xs text-muted-foreground">Search Mode</label>
           <Select
@@ -150,26 +142,8 @@ export function FilterBar() {
             </SelectContent>
           </Select>
         </div>
-
-        {/* License stays in top row */}
-        <div className="flex flex-col gap-2">
-          <label className="text-xs text-muted-foreground">License</label>
-          <Select value={license} onValueChange={(v) => setURLParam("license", v)}>
-            <SelectTrigger className="bg-background">
-              <SelectValue placeholder="Any" />
-            </SelectTrigger>
-            <SelectContent>
-              {licenses.map((l) => (
-                <SelectItem key={l} value={l}>
-                  {l}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
-      {/* AI Prompt (only when AI mode) */}
       {mode === "ai" ? (
         <div className="mt-4">
           <label className="mb-2 block text-xs text-muted-foreground">AI Prompt</label>
@@ -188,7 +162,6 @@ export function FilterBar() {
       ) : null}
 
       <div className="mt-4 grid gap-4 md:grid-cols-4">
-        {/* Language */}
         <div className="flex flex-col gap-2">
           <label className="text-xs text-muted-foreground">Language</label>
           <Select value={language} onValueChange={(v) => setURLParam("language", v)}>
@@ -205,13 +178,11 @@ export function FilterBar() {
           </Select>
         </div>
 
-        {/* Min Stars */}
         <div className="flex flex-col gap-2">
-          <label className="text-xs text-muted-foreground">Min Stars: {stars.toLocaleString()}</label>
-          <Slider min={0} max={50000} step={500} value={[stars]} onValueChange={(vals) => setStars(vals[0] ?? 0)} />
+          <label className="text-xs text-muted-foreground">Min Health: {healthMin}</label>
+          <Slider min={0} max={100} step={5} value={[healthMin]} onValueChange={(vals) => setHealthMin(vals[0] ?? 0)} />
         </div>
 
-        {/* Updated timeframe */}
         <div className="flex flex-col gap-2">
           <label className="text-xs text-muted-foreground">Updated</label>
           <Select value={timeframe} onValueChange={(v) => setURLParam("timeframe", v)}>
@@ -228,7 +199,6 @@ export function FilterBar() {
           </Select>
         </div>
 
-        {/* Sort */}
         <div className="flex flex-col gap-2">
           <label className="text-xs text-muted-foreground">Sort</label>
           <Select value={sort} onValueChange={(v) => setURLParam("sort", v)}>
@@ -244,7 +214,6 @@ export function FilterBar() {
         </div>
       </div>
 
-      {/* Topics line remains */}
       <div className="mt-4 grid gap-4 md:grid-cols-4">
         <div className="flex flex-col gap-2 md:col-span-2">
           <label className="text-xs text-muted-foreground">Topics (comma separated)</label>

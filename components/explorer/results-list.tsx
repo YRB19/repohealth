@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useState } from "react"
+import { HealthScore } from "./health-score"
+import { RepoDetailsModal } from "./repo-details-modal"
 
 type Repo = {
   id: number
@@ -20,6 +23,8 @@ type Repo = {
   watchers: number
   openIssues: number
   aiSummary?: string // optional AI-generated paragraph
+  healthScore?: number
+  healthLabel?: string
 }
 
 export function ResultsList({
@@ -42,6 +47,9 @@ export function ResultsList({
     router.replace(`${pathname}?${url.searchParams.toString()}`)
   }
 
+  const [open, setOpen] = useState(false)
+  const [selected, setSelected] = useState<Repo | null>(null)
+
   return (
     <div className="pb-10">
       <p className="mb-3 text-sm text-muted-foreground">
@@ -56,24 +64,43 @@ export function ResultsList({
                 <a href={r.htmlUrl} target="_blank" rel="noreferrer" className="hover:underline">
                   {r.fullName}
                 </a>
-                <div className="flex items-center gap-2">
-                  {r.language ? <Badge variant="secondary">{r.language}</Badge> : null}
-                  {r.license ? <Badge variant="outline">{r.license}</Badge> : null}
+                <div className="flex items-center gap-3">
+                  {typeof r.healthScore === "number" ? (
+                    <HealthScore score={r.healthScore} size={64} className="hidden sm:block" />
+                  ) : null}
+                  <div className="flex items-center gap-2">
+                    {r.language ? <Badge variant="secondary">{r.language}</Badge> : null}
+                    {r.license ? <Badge variant="outline">{r.license}</Badge> : null}
+                  </div>
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              {/* Prefer AI summary when available */}
               {r.aiSummary ? (
                 <p className="text-pretty text-foreground">{r.aiSummary}</p>
               ) : (
                 <p className="text-pretty text-muted-foreground">{r.description || "No description."}</p>
               )}
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                <span>★ {r.stars.toLocaleString()}</span>
-                <span>Forks {r.forks.toLocaleString()}</span>
-                <span>Issues {r.openIssues.toLocaleString()}</span>
-                <span>Updated {new Date(r.updatedAt).toLocaleDateString()}</span>
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3">
+                  {typeof r.healthScore === "number" ? (
+                    <span>
+                      {r.healthLabel || "Health"} ({Math.round(r.healthScore)}/100)
+                    </span>
+                  ) : null}
+                  <span>Forks {r.forks.toLocaleString()}</span>
+                  <span>Issues {r.openIssues.toLocaleString()}</span>
+                  <span>Updated {new Date(r.updatedAt).toLocaleDateString()}</span>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setSelected(r)
+                    setOpen(true)
+                  }}
+                >
+                  View Details
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -91,6 +118,21 @@ export function ResultsList({
           Next
         </Button>
       </div>
+
+      <RepoDetailsModal
+        open={open}
+        onOpenChange={setOpen}
+        repo={
+          selected
+            ? {
+                full_name: selected.fullName,
+                name: selected.name,
+                description: selected.description,
+                healthScore: selected.healthScore,
+              }
+            : null
+        }
+      />
     </div>
   )
 }

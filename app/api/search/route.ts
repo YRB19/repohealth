@@ -22,6 +22,7 @@ export async function GET(req: Request) {
   const starsMin = url.searchParams.get("starsMin") || ""
   const timeframe = url.searchParams.get("timeframe") || "any"
   const sort = url.searchParams.get("sort") || "best-match"
+  const healthMin = Number.parseInt(url.searchParams.get("healthMin") || "0", 10)
   const topics = (url.searchParams.get("topics") || "")
     .split(",")
     .map((t) => t.trim())
@@ -85,8 +86,76 @@ export async function GET(req: Request) {
     }
 
     const items = Array.isArray(data.items) ? data.items : []
-    // normalize shape
-    const results = items.map((r: any) => ({
+
+    // Helpers
+    const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n))
+    const normalize = (arr: number[]) => {
+      const min = Math.min(...arr)
+      const max = Math.max(...arr)
+      if (!isFinite(min) || !isFinite(max) || max === min) {
+        // flat distribution → neutral 50
+        return arr.map(() => 50)
+      }
+      return arr.map((v) => ((v - min) / (max - min)) * 100)
+    }
+    // Lower-is-better values (e.g., days since updated) → invert after normalizing
+    const normalizeInverse = (arr: number[]) => normalize(arr).map((v) => 100 - v)
+
+    // Prepare signals using available fields
+    const now = Date.now()
+    const forksArr = items.map((r: any) => Number(r.forks_count || 0))
+    const watchersArr = items.map((r: any) => Number(r.watchers_count || 0))
+    const issuesArr = items.map((r: any) => Number(r.open_issues_count || 0))
+    const daysSinceUpdatedArr = items.map((r: any) => {
+      const t = new Date(r.updated_at).getTime()
+      const days = (now - t) / (1000 * 60 * 60 * 24)
+      // cap at 2 years to bound the scale
+      return Math.min(days, 730)
+    })
+
+    // Normalized 0–100 signals
+    const activityNorm = normalize(forksArr) // activity proxy: forks
+    const communityNorm = normalize(watchersArr) // community proxy: watchers
+    const freshnessNorm = normalizeInverse(daysSinceUpdatedArr) // fresher → higher
+
+    // Docs proxy: description length + license presence
+    const docsNorm = items.map((r: any) => {
+      const desc = (r.description || "").trim()
+      const descScore = clamp((desc.length / 120) * 100) // ~120 chars → 100
+      const licenseScore = r.license ? 100 : 50
+      return clamp(0.7 * descScore + 0.3 * licenseScore)
+    })
+
+    // Compatibility proxy: language + license present
+    const compatibilityNorm = items.map((r: any) => {
+      const langScore = r.language ? 100 : 50
+      const licenseScore = r.license ? 100 : 60
+      return clamp(0.6 * langScore + 0.4 * licenseScore)
+    })
+
+    // Weights (sum to 1.0): Activity .30, Community .25, Docs .15, Freshness .15, Compatibility .15
+    const WEIGHTS = { activity: 0.3, community: 0.25, docs: 0.15, freshness: 0.15, compatibility: 0.15 }
+
+    // Attach scores to items
+    const scored = items.map((r: any, i: number) => {
+      const score =
+        WEIGHTS.activity * activityNorm[i] +
+        WEIGHTS.community * communityNorm[i] +
+        WEIGHTS.docs * docsNorm[i] +
+        WEIGHTS.freshness * freshnessNorm[i] +
+        WEIGHTS.compatibility * compatibilityNorm[i]
+
+      const healthScore = Number(score.toFixed(1))
+      const healthLabel = healthScore >= 80 ? "Highly recommended" : healthScore >= 60 ? "Promising" : "Needs review"
+
+      return { r, healthScore, healthLabel }
+    })
+
+    // Rank by health score (desc)
+    scored.sort((a, b) => b.healthScore - a.healthScore)
+
+    // Normalize shape, include health fields
+    let results = scored.map(({ r, healthScore, healthLabel }) => ({
       id: r.id,
       name: r.name,
       owner: r.owner?.login,
@@ -100,11 +169,19 @@ export async function GET(req: Request) {
       forks: r.forks_count,
       watchers: r.watchers_count,
       openIssues: r.open_issues_count,
+      // health fields (0–100)
+      healthScore,
+      healthLabel,
     }))
 
+    if (Number.isFinite(healthMin) && healthMin > 0) {
+      results = results.filter((r) => (r.healthScore ?? 0) >= healthMin)
+    }
+
     return NextResponse.json({
-      totalCount: data.total_count || 0,
+      totalCount: results.length,
       items: results,
+      ranking: "composite-health-score",
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Unexpected error" }, { status: 500 })
