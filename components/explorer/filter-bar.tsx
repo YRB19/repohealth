@@ -93,7 +93,6 @@ export function FilterBar() {
     [pathname, router],
   )
 
-  const language = searchParams.get("language") || "any"
   const timeframe = searchParams.get("timeframe") || "any"
   const sort = searchParams.get("sort") || "best-match"
   const topics = searchParams.get("topics") || ""
@@ -164,7 +163,7 @@ export function FilterBar() {
       <div className="mt-4 grid gap-4 md:grid-cols-4">
         <div className="flex flex-col gap-2">
           <label className="text-xs text-muted-foreground">Language</label>
-          <Select value={language} onValueChange={(v) => setURLParam("language", v)}>
+          <Select value={searchParams.get("language") || "any"} onValueChange={(v) => setURLParam("language", v)}>
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Any" />
             </SelectTrigger>

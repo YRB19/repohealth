@@ -34,7 +34,7 @@ function Slider({
       <SliderPrimitive.Track
         data-slot="slider-track"
         className={
-          'bg-muted relative grow overflow-hidden rounded-full shadow-inner data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5 after:content-[""] after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:h-2.5 after:w-0.5 after:rounded-sm after:bg-foreground/20'
+          'bg-muted relative grow overflow-hidden rounded-full shadow-inner data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5 after:content-[""] after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:h-2.5 after:w-0.5 after:rounded-sm after:bg-foreground/20 before:content-[""] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary'
         }
       >
         <SliderPrimitive.Range

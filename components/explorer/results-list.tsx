@@ -56,12 +56,12 @@ export function ResultsList({
         Showing {items.length.toLocaleString()} of {totalCount.toLocaleString()} repositories
       </p>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2">
         {items.map((r) => (
-          <Card key={r.id} className="bg-secondary">
+          <Card key={r.id} className="bg-secondary h-full flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-3">
-                <a href={r.htmlUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                <a href={r.htmlUrl} target="_blank" rel="noreferrer" className="hover:underline break-words">
                   {r.fullName}
                 </a>
                 <div className="flex items-center gap-3">
@@ -75,11 +75,11 @@ export function ResultsList({
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+            <CardContent className="space-y-3 text-sm flex-1">
               {r.aiSummary ? (
-                <p className="text-pretty text-foreground">{r.aiSummary}</p>
+                <p className="text-pretty text-foreground break-words">{r.aiSummary}</p>
               ) : (
-                <p className="text-pretty text-muted-foreground">{r.description || "No description."}</p>
+                <p className="text-pretty text-muted-foreground break-words">{r.description || "No description."}</p>
               )}
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
                 <div className="flex flex-wrap items-center gap-3">
