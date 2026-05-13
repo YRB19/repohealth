@@ -46,7 +46,11 @@ export function ExplorerPageClient() {
   })
 
   const endpoint = mode === "ai" ? "/api/ai-search" : "/api/search"
-  const { data, error, isLoading } = useSWR(`${endpoint}?${qs.toString()}`, fetcher, { revalidateOnFocus: false })
+  const { data, error, isLoading } = useSWR(`${endpoint}?${qs.toString()}`, fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 60000,
+  })
 
   return (
     <section className="mx-auto max-w-6xl px-4">

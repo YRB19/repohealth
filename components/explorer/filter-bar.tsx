@@ -28,6 +28,7 @@ export function FilterBar() {
   const lastAppliedHealthRef = useRef<number>(Number.parseInt(searchParams.get("healthMin") || "0", 10))
   const queryDebounceRef = useRef<number | null>(null)
   const starsDebounceRef = useRef<number | null>(null)
+  const topicsDebounceRef = useRef<number | null>(null)
 
   useEffect(() => {
     setQInput(searchParams.get("query") || "")
@@ -216,7 +217,22 @@ export function FilterBar() {
       <div className="mt-4 grid gap-4 md:grid-cols-4">
         <div className="flex flex-col gap-2 md:col-span-2">
           <label className="text-xs text-muted-foreground">Topics (comma separated)</label>
-          <Input placeholder="react, nextjs" value={topics} onChange={(e) => setURLParam("topics", e.target.value)} />
+          <Input 
+            placeholder="react, nextjs" 
+            value={topics} 
+            onChange={(e) => {
+              const newValue = e.target.value
+              if (topicsDebounceRef.current) {
+                window.clearTimeout(topicsDebounceRef.current)
+              }
+              topicsDebounceRef.current = window.setTimeout(() => {
+                const url = new URL(window.location.href)
+                setParam(url, "topics", newValue)
+                setParam(url, "page", "1")
+                router.replace(`${pathname}?${url.searchParams.toString()}`)
+              }, 400)
+            }}
+          />
         </div>
       </div>
     </div>
