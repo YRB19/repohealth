@@ -11,7 +11,10 @@ const fetcher = async (url: string) => {
   const res = await fetch(url)
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err?.error || `Request failed: ${res.status}`)
+    // Create error with status code for better error handling
+    const error = new Error(err?.error || `Request failed: ${res.status}`)
+    ;(error as any).status = res.status
+    throw error
   }
   return res.json()
 }
@@ -50,6 +53,8 @@ export function ExplorerPageClient() {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
     dedupingInterval: 60000,
+    shouldRetryOnError: false,
+    errorRetryCount: 0,
   })
 
   return (
