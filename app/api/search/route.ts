@@ -179,7 +179,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({
-      totalCount: results.length,
+      totalCount: data.total_count || results.length,
       items: results,
       ranking: "composite-health-score",
     })
