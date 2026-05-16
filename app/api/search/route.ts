@@ -179,7 +179,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({
-      totalCount: data.total_count || results.length,
+      totalCount: (Number.isFinite(healthMin) && healthMin > 0) ? results.length : (data.total_count || results.length),
       items: results,
       ranking: "composite-health-score",
     })

@@ -129,6 +129,10 @@ export function ResultsList({
                 name: selected.name,
                 description: selected.description,
                 healthScore: selected.healthScore,
+                stars: selected.stars,
+                forks: selected.forks,
+                openIssues: selected.openIssues,
+                language: selected.language,
               }
             : null
         }

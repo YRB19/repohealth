@@ -24,21 +24,28 @@ export function FilterBar() {
   const [healthMin, setHealthMin] = useState<number>(Number.parseInt(searchParams.get("healthMin") || "0", 10))
   const [mode, setMode] = useState<string>(searchParams.get("mode") || "normal")
   const [aiPromptInput, setAiPromptInput] = useState<string>(searchParams.get("aiPrompt") || "")
+  const [topicsInput, setTopicsInput] = useState(searchParams.get("topics") || "")
 
   const lastAppliedHealthRef = useRef<number>(Number.parseInt(searchParams.get("healthMin") || "0", 10))
   const queryDebounceRef = useRef<number | null>(null)
   const starsDebounceRef = useRef<number | null>(null)
   const topicsDebounceRef = useRef<number | null>(null)
+  const isMountedRef = useRef(false)
 
   useEffect(() => {
     setQInput(searchParams.get("query") || "")
     setHealthMin(Number.parseInt(searchParams.get("healthMin") || "0", 10))
     setMode(searchParams.get("mode") || "normal")
     setAiPromptInput(searchParams.get("aiPrompt") || "")
+    setTopicsInput(searchParams.get("topics") || "")
     lastAppliedHealthRef.current = Number.parseInt(searchParams.get("healthMin") || "0", 10)
   }, [searchParams])
 
   useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true
+      return
+    }
     if (queryDebounceRef.current) {
       window.clearTimeout(queryDebounceRef.current)
     }
@@ -219,9 +226,10 @@ export function FilterBar() {
           <label className="text-xs text-muted-foreground">Topics (comma separated)</label>
           <Input 
             placeholder="react, nextjs" 
-            value={topics} 
+            value={topicsInput} 
             onChange={(e) => {
               const newValue = e.target.value
+              setTopicsInput(newValue)
               if (topicsDebounceRef.current) {
                 window.clearTimeout(topicsDebounceRef.current)
               }
