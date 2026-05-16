@@ -123,33 +123,19 @@ export async function GET(req: Request) {
       )
     }
 
-    const prompt = `
-You are a helpful technical writer. Given the following GitHub repository metadata, write a concise professional paragraph for each repo that:
-- Explains what the project does and why it's useful
-- Highlights main technologies or unique features
-- Sounds like a human-written tech overview
-- Avoids bullet points and marketing fluff
-
-Return ONLY a JSON array. Each item MUST be:
-{
-  "fullName": string,
-  "summary": string
-}
-
-Here is the data:
-${JSON.stringify(
+    const prompt = `You are a technical writer. For each GitHub repo, write ONE sentence summary.
+Return ONLY valid JSON array: [{"fullName":"owner/name", "summary":"sentence"}]
+Repos: ${JSON.stringify(
   repos.map((r) => ({
     fullName: r.fullName,
     description: r.description,
-    stars: r.stars,
     language: r.language,
   })),
-)}
-    `.trim()
+)}`.trim()
 
-    // Gemini v1beta REST: generateContent
+    // Gemini REST: generateContent using gemini-2.0-flash
     const geminiRes = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey,
+      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=" + apiKey,
       {
         method: "POST",
         headers: {
@@ -158,9 +144,10 @@ ${JSON.stringify(
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 800,
-            responseMimeType: "application/json",
+            temperature: 0.3,
+            maxOutputTokens: 4000,
+            topP: 0.95,
+            topK: 40,
           },
         }),
       },
@@ -171,7 +158,7 @@ ${JSON.stringify(
       // Return GitHub results without AI summaries on failure
       return NextResponse.json(
         {
-          error: body?.error?.message || "Gemini request failed",
+          error: body?.error?.message || `Gemini request failed with status ${geminiRes.status}`,
           totalCount: data.total_count || repos.length,
           items: repos,
         },
@@ -180,12 +167,25 @@ ${JSON.stringify(
     }
 
     const geminiJson = await geminiRes.json()
+    
     // Response shape: candidates[0].content.parts[0].text
-    const text =
-      geminiJson?.candidates?.[0]?.content?.parts?.[0]?.text ??
-      geminiJson?.candidates?.[0]?.output ?? // safety fallback
-      ""
-
+    let text = ""
+    
+    // Try multiple paths to extract text from Gemini response
+    if (geminiJson?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      text = geminiJson.candidates[0].content.parts[0].text
+    } else if (geminiJson?.candidates?.[0]?.output) {
+      text = geminiJson.candidates[0].output
+    } else if (typeof geminiJson?.text === "string") {
+      text = geminiJson.text
+    } else if (Array.isArray(geminiJson?.candidates) && geminiJson.candidates.length > 0) {
+      // Fallback: stringify the entire candidate in case structure is different
+      const candidate = geminiJson.candidates[0]
+      if (candidate && typeof candidate === "object") {
+        text = JSON.stringify(candidate)
+      }
+    }
+    
     const parsed = extractJsonArray(text)
     const summaryMap = new Map<string, string>()
     for (const row of parsed) {
