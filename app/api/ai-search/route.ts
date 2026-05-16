@@ -135,7 +135,7 @@ Repos: ${JSON.stringify(
 
     // Gemini REST: generateContent using gemini-2.0-flash
     const geminiRes = await fetch(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=" + apiKey,
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey,
       {
         method: "POST",
         headers: {

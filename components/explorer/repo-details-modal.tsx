@@ -16,6 +16,10 @@ type RepoLite = {
   name: string
   description?: string
   healthScore?: number
+  stars?: number
+  forks?: number
+  openIssues?: number
+  language?: string | null
 }
 
 type Props = {
@@ -45,7 +49,7 @@ export function RepoDetailsModal({ open, onOpenChange, repo }: Props) {
             <Card className="bg-card">
               <CardContent className="p-3">
                 <div className="text-muted-foreground">Open issues</div>
-                <div className="font-medium">{data?.stats?.open_issues ?? "—"}</div>
+                <div className="font-medium">{repo?.openIssues ?? data?.stats?.open_issues ?? "—"}</div>
               </CardContent>
             </Card>
             <Card className="bg-card">
@@ -57,13 +61,13 @@ export function RepoDetailsModal({ open, onOpenChange, repo }: Props) {
             <Card className="bg-card">
               <CardContent className="p-3">
                 <div className="text-muted-foreground">Stars</div>
-                <div className="font-medium">{data?.stats?.stargazers ?? "—"}</div>
+                <div className="font-medium">{repo?.stars ?? data?.stats?.stargazers ?? "—"}</div>
               </CardContent>
             </Card>
             <Card className="bg-card">
               <CardContent className="p-3">
                 <div className="text-muted-foreground">Primary language</div>
-                <div className="font-medium">{data?.stats?.language ?? "—"}</div>
+                <div className="font-medium">{repo?.language ?? data?.stats?.language ?? "—"}</div>
               </CardContent>
             </Card>
           </div>
